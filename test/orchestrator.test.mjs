@@ -70,6 +70,11 @@ const ctx = {
 }
 apply(ctx)
 
+// 包内 preload 应被部署到 $DSH_HOME/startup-orchestrator/preload.mjs
+const deployedPreload = path.join(testHome, 'startup-orchestrator', 'preload.mjs')
+assert.equal(fs.existsSync(deployedPreload), true, 'preload deployed from package lib')
+assert.ok(fs.statSync(deployedPreload).size > 1000, 'deployed preload is non-empty')
+
 async function call(method, routePath, payload) {
   const route = routes.get(routePath)
   assert.ok(route, routePath + ' registered')
@@ -133,6 +138,7 @@ assert.deepEqual(
 await call('POST', '/startup-orchestrator/done', { reason: 'test' })
 const state = JSON.parse((await call('GET', '/startup-orchestrator/state')).body)
 assert.equal(state.bootDone, true)
+assert.ok(['deployed', 'present'].includes(state.preloadDeploy?.status), 'state reports deployed preload')
 
 // 4) 页面注入脚本存在
 assert.ok(injected.length >= 1)

@@ -1,5 +1,8 @@
 node_modules/
 .artifacts/
+dist/
+coverage/
+.dev-home/
 *.log
 *.tgz
 *.before-orchestrator-*

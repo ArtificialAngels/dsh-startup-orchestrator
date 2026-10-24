@@ -1,48 +1,78 @@
 {
   "name": "dsh-startup-orchestrator",
-  "version": "0.1.0",
-  "private": true,
-  "description": "DSH 启动编排：核心/开机启动/常用三组、顺序、等待时间，以及开机动画后加载常用插件。",
+  "displayName": "启动编排",
+  "version": "0.2.0",
+  "description": "DSH 启动编排：核心/开机启动/常用三组，顺序、等待时间与开机动画后加载；附 DSH-Portable preload 自愈。",
+  "keywords": [
+    "deepseek-harness",
+    "deepseek-harness-plugin",
+    "dsh",
+    "dsh-plugin",
+    "cordis-plugin",
+    "startup",
+    "boot-order",
+    "orchestrator"
+  ],
+  "license": "MIT",
+  "author": "ArtificialAngels",
   "type": "module",
+  "engines": {
+    "node": ">=22.17.0",
+    "dsh": "0.2.1-rc.2"
+  },
   "main": "./lib/index.js",
   "exports": {
     ".": "./lib/index.js",
     "./client": "./lib/client.js",
     "./cordis.patch.yml": "./cordis.patch.yml",
+    "./preload.mjs": "./lib/preload.mjs",
     "./package.json": "./package.json"
   },
   "files": [
     "lib",
-    "preload.mjs",
     "cordis.patch.yml",
-    "README.md"
+    "README.md",
+    "README.en.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "assets"
   ],
+  "icon": "./assets/icon.svg",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ArtificialAngels/dsh-startup-orchestrator.git"
+  },
+  "homepage": "https://github.com/ArtificialAngels/dsh-startup-orchestrator#readme",
+  "bugs": {
+    "url": "https://github.com/ArtificialAngels/dsh-startup-orchestrator/issues"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node scripts/build.mjs && node test/orchestrator.test.mjs && node test/order-swap.test.mjs && node test/launcher-hook.test.mjs",
+    "check": "node scripts/build.mjs && node test/orchestrator.test.mjs && node test/order-swap.test.mjs && node test/launcher-hook.test.mjs",
+    "pack": "node scripts/build.mjs && pnpm pack --pack-destination dist"
+  },
   "dsh": {
+    "manifestVersion": 1,
     "bundle": {
       "patch": "./cordis.patch.yml"
     },
     "client": {
+      "platform": "web",
       "inject": [
         "@deepseek-ai/dsh-client-ui-settings"
-      ],
-      "platform": "web"
+      ]
+    },
+    "compatibility": {
+      "profiles": [
+        "web"
+      ]
     }
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": ">=4.0.1",
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-client-ui-settings": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-host-webserver": "0.2.1-rc.2",
     "react": "^18.2.0"
-  },
-  "peerDependenciesMeta": {
-    "@deepseek-ai/cordis": {
-      "optional": true
-    },
-    "react": {
-      "optional": true
-    }
-  },
-  "engines": {
-    "node": ">=20"
-  },
-  "author": "DSH-Portable workspace",
-  "license": "MIT"
+  }
 }

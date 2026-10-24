@@ -149,6 +149,14 @@
   但本次启动的插件会把钩子补回去，**再重启一次**即恢复。若新版 launcher 结构变化导致
   自愈返回 `anchor-missing`，运行 `scripts/ensure-launcher-hook.mjs` 查看并需要适配锚点。
 
+## 0.2.0 结构规范化（2026-10-24）
+
+- 源码迁入 `src/`，`lib/` 由 `scripts/build.mjs` 生成并随包发布（构建时校验语法与 client loader id）。
+- manifest 补齐 DSH bundle 规范字段：`dsh.manifestVersion: 1`、`engines.dsh`、`dsh.compatibility.profiles`、`exports`、`files` 白名单、`icon`、`repository`。
+- `preload.mjs` 作为包内 `lib/preload.mjs` 发布，Host 每次启动部署到 `$DSH_HOME/startup-orchestrator/preload.mjs`；不再手工复制。
+- 安装改为标准流程：`pnpm pack` → `dsh plugin add file:<tarball>`。profile 记录 tarball 路径，代码位于 `profiles/web/node_modules/dsh-startup-orchestrator`。
+- 验证：build/三组测试通过；`dsh plugin add` exit 0（lockfile 0.2.0）；import preflight `ok:true`；`--dump-config` 可见 entry。
+
 ## 回滚
 
 1. 恢复 profile 的 `package.json` / `cordis.patch.yml`（`.before-orchestrator-*` 备份）；
