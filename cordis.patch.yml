@@ -1,0 +1,8 @@
+# dsh-startup-orchestrator — bundle patch
+#
+# 宿主半侧：提供设置面板 API、开机动画完成信号、配置读写。
+# 浏览器半侧：lib/client.js（settings.section「启动编排」）。
+# 进程级调度：$DSH_HOME/startup-orchestrator/preload.mjs（由 launcher 注入）。
+- insert:
+    - id: dsh-startup-orchestrator
+      name: 'dsh-startup-orchestrator'
