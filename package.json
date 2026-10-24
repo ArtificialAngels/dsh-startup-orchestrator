@@ -1,7 +1,7 @@
 {
   "name": "dsh-startup-orchestrator",
   "displayName": "启动编排",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "DSH 启动编排：核心/开机启动/常用三组，顺序、等待时间与开机动画后加载；附 DSH-Portable preload 自愈。",
   "keywords": [
     "deepseek-harness",
@@ -48,8 +48,8 @@
   },
   "scripts": {
     "build": "node scripts/build.mjs",
-    "test": "node scripts/build.mjs && node test/orchestrator.test.mjs && node test/order-swap.test.mjs && node test/launcher-hook.test.mjs",
-    "check": "node scripts/build.mjs && node test/orchestrator.test.mjs && node test/order-swap.test.mjs && node test/launcher-hook.test.mjs",
+    "test": "node scripts/build.mjs && node test/orchestrator.test.mjs && node test/order-swap.test.mjs && node test/launcher-hook.test.mjs && node test/media-intro-gate.test.mjs",
+    "check": "node scripts/build.mjs && node test/orchestrator.test.mjs && node test/order-swap.test.mjs && node test/launcher-hook.test.mjs && node test/media-intro-gate.test.mjs",
     "pack": "node scripts/build.mjs && pnpm pack --pack-destination dist"
   },
   "dsh": {

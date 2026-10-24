@@ -157,6 +157,15 @@
 - 安装改为标准流程：`pnpm pack` → `dsh plugin add file:<tarball>`。profile 记录 tarball 路径，代码位于 `profiles/web/node_modules/dsh-startup-orchestrator`。
 - 验证：build/三组测试通过；`dsh plugin add` exit 0（lockfile 0.2.0）；import preflight `ok:true`；`--dump-config` 可见 entry。
 
+## 0.2.1 开屏等待扩展（2026-10-24）
+
+- 常用组的“等待开机动画”现在也等 `media-wallpaper` 的开屏动画：
+  - Host 计算 `MEDIA_INTRO_GATE`：媒体插件已打包、启用、且分在②boot 组；
+  - 页面注入脚本读取 `dsh-plugin-media-wallpaper.settings.v1`，仅当 `intro.enabled` 且有媒体时等待；
+  - 用 `MutationObserver` 观察 `[data-wp-intro]`，层撤掉后 POST `/done`，preload 才放行常用组；
+  - 未启用/未安装/在③common 组时不等待（避免死锁）。
+- 等待窗口：启动后最多 10 秒等开屏层出现，出现后最多 120 秒；页面总超时 150 秒。
+
 ## 回滚
 
 1. 恢复 profile 的 `package.json` / `cordis.patch.yml`（`.before-orchestrator-*` 备份）；

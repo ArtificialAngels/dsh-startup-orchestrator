@@ -163,13 +163,13 @@ window.__ModuleLoader__.load({
                   type: 'checkbox', checked: cfg.waitForAnimation === true,
                   onChange: function (event) { setGroupField('waitForAnimation', event.target.checked) }
                 }),
-                '等待开机动画播完'
+                '等待开机动画播完（含 media-wallpaper 开屏）'
               )
             : null
         ),
         h('div', { className: '__so_hint' },
           group === 'common'
-            ? '顺序：核心组全部就绪 → 开机动画结束（或关闭此项时仅等待上方时长）→ 常用插件按下面的顺序逐个加载。'
+            ? '顺序：核心组全部就绪 → 开机动画结束（若启用 media-wallpaper 开屏，也等它播完；该插件需在②开机启动项）→ 常用插件按下面的顺序逐个加载。'
             : '顺序：核心组全部就绪 → 等待上方时长 → 开机启动项按下面的顺序逐个加载。'
         ),
         h('div', { className: '__so_list' },

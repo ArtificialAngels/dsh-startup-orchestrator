@@ -10,13 +10,13 @@ A DSH startup orchestrator plugin: load profile plugins in three ordered groups 
 
 - Core group (all `@deepseek-ai/*` bundles + this plugin) is locked and loads first.
 - Boot group (default `dsh-startup-screen`, `dsh-ops`) loads after core with a start delay and per-item interval.
-- Common group (pets, memory, sidebar, …) waits for the splash animation by default, then loads in order.
+- Common group (pets, memory, sidebar, …) waits for the splash animation by default, then loads in order. If `media-wallpaper`'s intro is enabled, the wait also covers its `[data-wp-intro]` layer (only when that plugin is in the boot group).
 - Panel controls: enable/disable per plugin, reorder with ↑/↓, move between boot/common, group wait and interval, splash wait toggle. Restart after saving.
 
 ## Install
 
 ```sh
-dsh plugin --profile web add ./dist/dsh-startup-orchestrator-0.2.0.tgz
+dsh plugin --profile web add ./dist/dsh-startup-orchestrator-0.2.1.tgz
 ```
 
 The plugin is installed as a real profile dependency under `profiles/web/node_modules/dsh-startup-orchestrator`. Do not copy the directory manually; a present directory is not an installed bundle.

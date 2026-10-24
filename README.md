@@ -12,16 +12,23 @@ DSH 启动编排插件：把 profile 里的插件分成三组按顺序加载，�
 | --- | --- | --- |
 | ① 核心 | 所有 `@deepseek-ai/*` 官方 bundle + 本插件 | 锁定，最早加载，不可删除/排序 |
 | ② 开机启动项 | `dsh-startup-screen`、`dsh-ops` | 核心之后，按顺序 + 间隔加载 |
-| ③ 常用插件 | 其余插件（宠物、记忆、侧栏等） | 默认等开机动画播完，再按顺序 + 间隔加载 |
+| ③ 常用插件 | 其余插件（宠物、记忆、侧栏等） | 默认等开机动画播完（若启用 media-wallpaper 开屏，也等它播完），再按顺序 + 间隔加载 |
 
 面板支持：启动加载开关、组内 ↑/↓ 排序、开机/常用互移、组开始前等待、组内每项间隔、是否等待开机动画。保存后需要重启 DSH 生效。
+
+“等待开机动画”现在同时覆盖 `dsh-startup-screen` 和 `media-wallpaper` 的开屏动画：
+
+- 读取 `dsh-plugin-media-wallpaper.settings.v1`，只有 `intro.enabled` 且已选媒体时才等待；
+- 观察 `[data-wp-intro]` 层，播完/撤层后才放行常用组；
+- 只在该插件位于②开机启动项时生效（若移到③常用组，等它会死锁，因此自动跳过）；
+- 未启用开屏或未安装该插件时行为不变。
 
 ## 安装
 
 标准 DSH bundle 安装（打包 tarball 后装进 profile）：
 
 ```sh
-dsh plugin --profile web add ./dist/dsh-startup-orchestrator-0.2.0.tgz
+dsh plugin --profile web add ./dist/dsh-startup-orchestrator-0.2.1.tgz
 ```
 
 也可以直接从 npm/GitHub 安装。安装后确认：
