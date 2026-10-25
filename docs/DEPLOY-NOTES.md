@@ -166,6 +166,67 @@
   - 未启用/未安装/在③common 组时不等待（避免死锁）。
 - 等待窗口：启动后最多 10 秒等开屏层出现，出现后最多 120 秒；页面总超时 150 秒。
 
+## 2026-10-25 DSH 0.2.1-rc.3 适配（0.2.2）
+
+DSH-Portable 把内核从 `dsh 0.2.1-rc.2` 升到 **`0.2.1-rc.3`**（runtime-cache
+`f61b85a6578b110bd9c7ba9ef6fc863da3e1f6ebb1bbeb20c6118bd93c87ee6e`）后，启动编排整体失效：
+设置面板还在，但 preload 调度器日志全是 `scheduler:false`，三组顺序/等待不再生效。
+
+### 根因：两道独立的版本门槛
+
+| 门槛 | 位置 | 判定方式 | rc.3 下的结果 |
+| --- | --- | --- | --- |
+| launcher peer 检查 | `launcher/profile-compatibility.mjs` 的 `pauseIncompatibleProfileBundles` | 按 bundle 的 **peerDependencies** 检查 `@deepseek-ai/*` 宿主版本（`includePrerelease: true`） | 精确 pin `0.2.1-rc.2` 不满足 `0.2.1-rc.3` → 插件被暂停并从 `dsh.profile.bundles` 移除（launcher.log：`plugin-compatibility-ready status=paused paused=1 plugins=dsh-startup-orchestrator`），preload 自然不再被 launcher 注入 |
+| app-boot engines 检查 | `@deepseek-ai/dsh-app-boot` 的 `evaluatePluginCompatibility` / `unmetRequirements` | 有 `engines.dsh` 时只看它（`includePrerelease: true`） | 精确 pin 不满足，插件被判 incompatible |
+
+### 改动（0.2.2）
+
+| 字段 | 旧值 | 新值 | 说明 |
+| --- | --- | --- | --- |
+| `version` | `0.2.1` | `0.2.2` | |
+| `engines.dsh` | `0.2.1-rc.2` | `^0.2.1-rc.2` | rc.3 的 semver：`0.2.1-rc.3`/`0.2.1-rc.4`/`0.2.2` = true，`0.3.0` = false |
+| peer `@deepseek-ai/dsh-client-ui-settings` | `0.2.1-rc.2` | `^0.2.1-rc.2` | |
+| peer `@deepseek-ai/dsh-host-webserver` | `0.2.1-rc.2` | `^0.2.1-rc.2` | |
+| peer `@deepseek-ai/cordis` | `^4.0.1` | 不变 | rc.3 装的是 `@deepseek-ai/cordis@4.0.5`，已满足 |
+| peer `react` | `^18.2.0` | 不变 | 客户端依赖，launcher 不检查 |
+
+### cordis-plugin-loader@1.0.6 复核结论：补丁点全部成立，preload 无需修改
+
+对照 `...\app\node_modules\@deepseek-ai\cordis-plugin-loader\lib\index.js`（1.0.6）与
+`src/preload.mjs` 的每个补丁点（`node scripts/check-loader-compat.mjs` 做静态 + 动态探针，31 项全 PASS）：
+
+| preload 依赖 | rc.3 loader 现状 | 结论 |
+| --- | --- | --- |
+| `export { Entry, ... }` / `class Entry` | 仍在（lib 末尾 `export { Entry, EntryGroup, EntryTree, ..., Loader ... }`） | 成立 |
+| `Entry.prototype.init()` + `async _init()` | `init()` 为 `await (this._initTask ??= this._init())`；`_init()` 内 `this.fiber = this.ctx.registry.plugin(plugin, ...).ctx.fiber` | 成立 |
+| loader 调 `this.init()` 的位置 | `refresh()` 与 `update()` 各一处（`update` 的 `else await this.init()`） | 成立（原型包裹可拦截） |
+| `entry.parent.tree.entries()` | `Entry.parent`、`EntryGroup.tree`、`EntryTree.entries()` 生成器都在 | 成立 |
+| `internal/plugin` 监听器置 `entry.options.disabled = true` + `tree.write()` | 仍在（`ctx.on("internal/plugin", fiber => { ... fiber.entry.options.disabled = true; fiber.entry.parent.tree.write() })`） | 成立，**历史 bug 依旧存在**（入口上下文的 fiber 被 dispose 会误禁用并写回树） |
+| root 上下文占位 fiber 避开该逻辑 | 占位 fiber 挂在 `entry.ctx.root`（无 `[Entry.key]`）→ 监听器首个分支 `if (!fiber.entry) return` 直接返回 | 成立；探针反向证明：挂在入口 ctx 的 fiber 被 dispose 仍会置 `disabled=true` |
+| `scheduler.isReleased()` 后交回官方 init | rc.3 loader 的 `init()` 就是官方入口 | 成立（放行后新建入口直接 apply） |
+| 非阻塞（`loader.await()` 不卡 URL） | `EntryTree.getTasks()` = `entry._initTask || entry.fiber?.inertia`；占位 fiber 为 no-op、`state=2` (ACTIVE)，`await` 能结束 | 成立（探针断言 `loader.await()` 在待释放期间结束） |
+| 启动审计 | app-boot `inactiveEntries()` 只看 `entry.fiber === undefined/state DISPOSED` | 占位 fiber `state=2`，不误报 |
+
+### rc.3 API 复核（Host / 客户端）
+
+- `ctx.get('webServer')` 的 `register({ kind: 'exact', path, handler })` 与 `tapIndex(transform)` 签名与 rc.2 一致（`dsh-host-webserver@0.2.1-rc.3`）。
+- `ctx.get('connection').requestRejection(req)` 仍在 `dsh-client-connection@0.2.1-rc.3`。
+- 客户端 `ctx.slots.inject('settings.section', ...)` + `ctx.slots.register({ name: 'settings.section', id, order, label }, Component)` 与官方 rc.3 插件（`dsh-client-ui-settings-general`、`dsh-client-ui-settings-plugins`）写法完全一致；`label` 支持 string 或函数（`resolveSlotLabel` 为 `typeof label === 'function' ? label() : label`）。
+- `dsh.client.inject` 声明语义在 `dsh-client-modules@0.2.1-rc.3` 未变。
+
+### 验证（0.2.2）
+
+```powershell
+node scripts/build.mjs          # built 4 files for dsh-startup-orchestrator@0.2.2
+node scripts/check-compat.mjs   # [a] engines.dsh=true；[b] 三个 @deepseek-ai peer 全 true
+node scripts/check-loader-compat.mjs  # 31 checks PASS（loader 补丁点仍成立）
+npm run check                   # host/order-swap/launcher-hook/media-intro-gate 全绿
+pnpm pack --pack-destination dist     # dist/dsh-startup-orchestrator-0.2.2.tgz
+```
+
+装 0.2.2 后重启一次：launcher.log 应为 `plugin-compatibility-ready status=ready paused=0`，
+`$DSH_HOME/startup-orchestrator.log` 出现 `scheduler-ready` / `preload-ready`，面板显示“进程调度器已加载”。
+
 ## 回滚
 
 1. 恢复 profile 的 `package.json` / `cordis.patch.yml`（`.before-orchestrator-*` 备份）；

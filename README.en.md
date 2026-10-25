@@ -4,7 +4,7 @@ A DSH startup orchestrator plugin: load profile plugins in three ordered groups 
 
 - Runtime data: `$DSH_HOME/startup-orchestrator.json`, `$DSH_HOME/startup-orchestrator.log`
 - Settings: **DSH Settings → Startup Orchestration**
-- Target runtime: `dsh 0.2.1-rc.2`, `web` profile
+- Target runtime: `dsh ^0.2.1-rc.2` (verified on `0.2.1-rc.3`, works through `0.2.2`), `web` profile
 
 ## Features
 
@@ -16,7 +16,7 @@ A DSH startup orchestrator plugin: load profile plugins in three ordered groups 
 ## Install
 
 ```sh
-dsh plugin --profile web add ./dist/dsh-startup-orchestrator-0.2.1.tgz
+dsh plugin --profile web add ./dist/dsh-startup-orchestrator-0.2.2.tgz
 ```
 
 The plugin is installed as a real profile dependency under `profiles/web/node_modules/dsh-startup-orchestrator`. Do not copy the directory manually; a present directory is not an installed bundle.

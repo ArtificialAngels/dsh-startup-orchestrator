@@ -4,7 +4,7 @@ DSH 启动编排插件：把 profile 里的插件分成三组按顺序加载，�
 
 - 运行期数据：`$DSH_HOME/startup-orchestrator.json`、`$DSH_HOME/startup-orchestrator.log`
 - 设置入口：**DSH 设置 → 启动编排**
-- 目标运行时：`dsh 0.2.1-rc.2`，`web` profile
+- 目标运行时：`dsh ^0.2.1-rc.2`（已在 `0.2.1-rc.3` 验证，兼容至 `0.2.2`），`web` profile
 
 ## 功能
 
@@ -28,7 +28,7 @@ DSH 启动编排插件：把 profile 里的插件分成三组按顺序加载，�
 标准 DSH bundle 安装（打包 tarball 后装进 profile）：
 
 ```sh
-dsh plugin --profile web add ./dist/dsh-startup-orchestrator-0.2.1.tgz
+dsh plugin --profile web add ./dist/dsh-startup-orchestrator-0.2.2.tgz
 ```
 
 也可以直接从 npm/GitHub 安装。安装后确认：
